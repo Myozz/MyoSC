@@ -1,0 +1,46 @@
+[tool.poetry]
+name = "myosc"
+version = "0.1.0"
+description = "MyoSC - Multi-purpose security scanner for source code, container images, and secrets"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+license = "MIT"
+packages = [{include = "myosc"}]
+
+[tool.poetry.scripts]
+myosc = "myosc.cli:run"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+typer = "^0.12.0"
+rich = "^13.7.0"
+httpx = "^0.27.0"
+pydantic = "^2.5.0"
+docker = "^7.0.0"
+tomli = "^2.0.1"
+packaging = "^24.0"
+click = "^8.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pytest-asyncio = "^0.23.0"
+ruff = "^0.1.0"
+mypy = "^1.8.0"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
