@@ -26,7 +26,7 @@ pip install myosc
 ## Cách Sử Dụng
 
 ```
-Usage: myosc [command] [target] [options]
+poetry run myosc [command] [target] [options]
 ```
 
 ### Commands

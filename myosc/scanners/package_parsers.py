@@ -264,12 +264,21 @@ def _parse_pep508(spec: str) -> Package | None:
 
 # Map of supported files to parsers
 PARSERS = {
+    # Python requirements files
     "requirements.txt": parse_requirements_txt,
     "requirements-dev.txt": parse_requirements_txt,
+    "requirements-test.txt": parse_requirements_txt,
+    "requirements-prod.txt": parse_requirements_txt,
     "requirements_dev.txt": parse_requirements_txt,
+    "requirements_test.txt": parse_requirements_txt,
+    "dev-requirements.txt": parse_requirements_txt,
+    "test-requirements.txt": parse_requirements_txt,
+    # Python pyproject.toml
     "pyproject.toml": parse_pyproject_toml,
+    # Node.js
     "package.json": parse_package_json,
     "package-lock.json": parse_package_lock_json,
+    # Go
     "go.mod": parse_go_mod,
 }
 

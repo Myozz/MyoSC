@@ -105,7 +105,7 @@ class TableFormatter(BaseFormatter):
         # Sort by priority score (highest first)
         findings = sorted(findings, key=lambda f: f.priority_score, reverse=True)
 
-        table = Table(title="Vulnerabilities", show_header=True, header_style="bold")
+        table = Table(title="Vulnerabilities", show_header=True, header_style="bold", show_lines=True)
         table.add_column("ID", style="cyan", no_wrap=True)
         table.add_column("Severity", justify="center")
         table.add_column("Package", style="green")
@@ -144,7 +144,7 @@ class TableFormatter(BaseFormatter):
 
     def _print_secrets(self, findings: list[SecretFinding], console: Console) -> None:
         """Print secrets table."""
-        table = Table(title="Secrets", show_header=True, header_style="bold")
+        table = Table(title="Secrets", show_header=True, header_style="bold", show_lines=True)
         table.add_column("Type", style="cyan")
         table.add_column("Severity", justify="center")
         table.add_column("File", style="green")
