@@ -1,12 +1,10 @@
 """Docker image scanner for container security analysis."""
 
 import json
-import re
 import tarfile
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator
 
 from myosc.core.models import (
     Finding,
@@ -16,8 +14,8 @@ from myosc.core.models import (
     VulnerabilityFinding,
 )
 from myosc.core.scanner import BaseScanner
-from myosc.db.osv import OSVClient
 from myosc.db.epss import EPSSClient
+from myosc.db.osv import OSVClient
 
 
 @dataclass

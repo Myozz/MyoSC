@@ -31,8 +31,6 @@ Usage: myosc [command] [target] [options]
 │ COMMAND     │ DESCRIPTION                                       │
 ├─────────────┼───────────────────────────────────────────────────┤
 │ fs          │ Scan filesystem (vulnerabilities + secrets)       │
-│ vulns       │ Scan for vulnerabilities only                     │
-│ secrets     │ Scan for secrets only                             │
 │ image       │ Scan Docker image (.tar or image name)            │
 └─────────────┴───────────────────────────────────────────────────┘
 ```
@@ -43,12 +41,11 @@ Usage: myosc [command] [target] [options]
 ┌─────────────────────────────────────────────────────────────────┐
 │ OPTION              │ DEFAULT   │ DESCRIPTION                   │
 ├─────────────────────┼───────────┼───────────────────────────────┤
+│ -s, --scanners      │ all       │ Scanners: vuln, secrets, all  │
 │ -f, --format        │ table     │ Output: table, json, sarif    │
 │ -o, --output        │ stdout    │ Write to file                 │
-│ -s, --severity      │ low       │ Min severity: critical, high, │
+│ --severity          │ all       │ Min severity: critical, high, │
 │                     │           │ medium, low                   │
-│ --no-secrets        │           │ Skip secret scanning (fs)     │
-│ --no-vulns          │           │ Skip vuln scanning (fs)       │
 │ -v, --version       │           │ Show version                  │
 │ --help              │           │ Show help                     │
 └─────────────────────┴───────────┴───────────────────────────────┘
@@ -57,17 +54,21 @@ Usage: myosc [command] [target] [options]
 ### Examples
 
 ```bash
-# Full scan
+# Full scan (default: vuln + secrets)
 myosc fs ./my-project
 
-# Vulnerabilities only (high+ severity)
-myosc vulns ./my-project --severity high
+# Vulnerabilities only
+myosc fs ./my-project -s vuln
 
 # Secrets only
-myosc secrets ./my-project
+myosc fs ./my-project -s secrets
 
-# Docker image (extracted)
-myosc image python:3.11-slim.tar
+# High+ severity only
+myosc fs ./my-project -s vuln --severity high
+
+# Docker image
+myosc image nginx:latest
+myosc image python:3.11-slim.tar -s vuln
 
 # SARIF output for GitHub
 myosc fs . --format sarif --output results.sarif

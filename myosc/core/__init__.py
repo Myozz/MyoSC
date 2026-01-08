@@ -9,8 +9,8 @@ from myosc.core.models import (
     Severity,
     VulnerabilityFinding,
 )
-from myosc.core.scanner import BaseScanner
 from myosc.core.registry import ScannerRegistry
+from myosc.core.scanner import BaseScanner
 
 __all__ = [
     "Finding",

@@ -18,7 +18,6 @@ from myosc.core.models import (
 )
 from myosc.formatters.base import BaseFormatter
 
-
 SARIF_VERSION = "2.1.0"
 SARIF_SCHEMA = "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json"
 

@@ -13,18 +13,15 @@ Entropy thresholds (based on character set):
 
 import math
 import re
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 from myosc.core.models import Finding, ScanTarget, SecretFinding, Severity, TargetType
 from myosc.core.scanner import BaseScanner
 from myosc.scanners.secret_patterns import (
-    ALL_PATTERNS,
     Confidence,
-    SecretPattern,
     get_patterns_by_confidence,
 )
-
 
 # Entropy thresholds
 ENTROPY_THRESHOLD_BASE64 = 4.5

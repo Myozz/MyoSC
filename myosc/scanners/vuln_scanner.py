@@ -6,14 +6,13 @@ from myosc.core.models import (
     Finding,
     Package,
     ScanTarget,
-    Severity,
     TargetType,
     VulnerabilityFinding,
 )
 from myosc.core.scanner import BaseScanner
-from myosc.db.osv import OSVClient
 from myosc.db.epss import EPSSClient
-from myosc.scanners.package_parsers import PARSERS, ParseResult
+from myosc.db.osv import OSVClient
+from myosc.scanners.package_parsers import PARSERS
 
 
 class VulnerabilityScanner(BaseScanner):

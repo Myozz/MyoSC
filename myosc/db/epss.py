@@ -13,7 +13,6 @@ import httpx
 
 from myosc.core.exceptions import DatabaseError, RateLimitError
 
-
 EPSS_API_URL = "https://api.first.org/data/v1/epss"
 DEFAULT_TIMEOUT = 30.0
 CACHE_TTL_HOURS = 24

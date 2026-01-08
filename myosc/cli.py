@@ -12,8 +12,30 @@ from myosc.core.models import ScanResult, ScanTarget, Severity, TargetType
 from myosc.formatters import JsonFormatter, SarifFormatter, TableFormatter
 from myosc.scanners import SecretScanner, VulnerabilityScanner
 
-
 console = Console()
+
+# Valid scanner types
+VALID_SCANNERS = {"vuln", "secrets", "all"}
+
+
+def parse_scanners(scanners: str) -> tuple[bool, bool]:
+    """Parse -s option to determine which scanners to run.
+
+    Returns:
+        tuple: (scan_vulns, scan_secrets)
+    """
+    scanner_list = [s.strip().lower() for s in scanners.split(",")]
+
+    # Validate scanner names
+    for s in scanner_list:
+        if s not in VALID_SCANNERS:
+            console.print(f"[red]Invalid scanner: {s}. Valid options: vuln, secrets, all[/red]")
+            raise SystemExit(1)
+
+    if "all" in scanner_list:
+        return True, True
+
+    return "vuln" in scanner_list, "secrets" in scanner_list
 
 
 @click.group()
@@ -25,52 +47,29 @@ def app() -> None:
 
 @app.command()
 @click.argument("path", type=click.Path(exists=True))
+@click.option("--scanners", "-s", default="all", help="Scanners to run: vuln, secrets, all (default: all)")
 @click.option("--format", "-f", default="table", help="Output format: table, json, sarif")
 @click.option("--output", "-o", type=click.Path(), help="Output file path")
-@click.option("--severity", "-s", default="low", help="Min severity: critical, high, medium, low")
-@click.option("--no-secrets", is_flag=True, help="Skip secret scanning")
-@click.option("--no-vulns", is_flag=True, help="Skip vulnerability scanning")
+@click.option("--severity", default="low", help="Min severity: critical, high, medium, low")
 def fs(
     path: str,
+    scanners: str,
     format: str,
     output: Optional[str],
     severity: str,
-    no_secrets: bool,
-    no_vulns: bool,
 ) -> None:
-    """Scan filesystem for vulnerabilities and secrets."""
+    """Scan filesystem for vulnerabilities and secrets.
+
+    Examples:
+        myosc fs ./project                    # Scan all (default)
+        myosc fs ./project -s vuln            # Vulnerabilities only
+        myosc fs ./project -s secrets         # Secrets only
+        myosc fs ./project -s vuln,secrets    # Explicit both
+    """
+    scan_vulns, scan_secrets = parse_scanners(scanners)
+
     target = ScanTarget(path=str(Path(path).resolve()), target_type=TargetType.FILESYSTEM)
-    result = asyncio.run(_run_scan(target, not no_vulns, not no_secrets))
-
-    min_sev = Severity[severity.upper()]
-    result.findings = result.filter_by_severity(min_sev)
-
-    output_path = Path(output) if output else None
-    _output_result(result, format, output_path)
-
-
-@app.command()
-@click.argument("path", type=click.Path(exists=True))
-@click.option("--format", "-f", default="table", help="Output format: table, json, sarif")
-@click.option("--output", "-o", type=click.Path(), help="Output file path")
-def secrets(path: str, format: str, output: Optional[str]) -> None:
-    """Scan for secrets only."""
-    target = ScanTarget(path=str(Path(path).resolve()), target_type=TargetType.FILESYSTEM)
-    result = asyncio.run(_run_scan(target, scan_vulns=False, scan_secrets=True))
-
-    output_path = Path(output) if output else None
-    _output_result(result, format, output_path)
-
-
-@app.command()
-@click.argument("path", type=click.Path(exists=True))
-@click.option("--format", "-f", default="table", help="Output format: table, json, sarif")
-@click.option("--output", "-o", type=click.Path(), help="Output file path")
-@click.option("--severity", "-s", default="low", help="Min severity: critical, high, medium, low")
-def vulns(path: str, format: str, output: Optional[str], severity: str) -> None:
-    """Scan for vulnerabilities only."""
-    target = ScanTarget(path=str(Path(path).resolve()), target_type=TargetType.FILESYSTEM)
-    result = asyncio.run(_run_scan(target, scan_vulns=True, scan_secrets=False))
+    result = asyncio.run(_run_scan(target, scan_vulns, scan_secrets))
 
     min_sev = Severity[severity.upper()]
     result.findings = result.filter_by_severity(min_sev)
@@ -81,18 +80,30 @@ def vulns(path: str, format: str, output: Optional[str], severity: str) -> None:
 
 @app.command()
 @click.argument("image_ref", type=str)
+@click.option("--scanners", "-s", default="all", help="Scanners to run: vuln, secrets, all (default: all)")
 @click.option("--format", "-f", default="table", help="Output format: table, json, sarif")
 @click.option("--output", "-o", type=click.Path(), help="Output file path")
-@click.option("--severity", "-s", default="low", help="Min severity: critical, high, medium, low")
-def image(image_ref: str, format: str, output: Optional[str], severity: str) -> None:
-    """Scan Docker image for vulnerabilities.
+@click.option("--severity", default="low", help="Min severity: critical, high, medium, low")
+def image(
+    image_ref: str,
+    scanners: str,
+    format: str,
+    output: Optional[str],
+    severity: str,
+) -> None:
+    """Scan Docker image for vulnerabilities and secrets.
 
     IMAGE_REF can be a tar file path or Docker image name.
+
+    Examples:
+        myosc image nginx:latest              # Scan all (default)
+        myosc image nginx:latest -s vuln      # Vulnerabilities only
+        myosc image ./image.tar -s secrets    # Secrets only
     """
-    from myosc.scanners import ImageScanner
+    scan_vulns, scan_secrets = parse_scanners(scanners)
 
     target = ScanTarget(path=image_ref, target_type=TargetType.IMAGE)
-    result = asyncio.run(_run_image_scan(target))
+    result = asyncio.run(_run_image_scan(target, scan_vulns, scan_secrets))
 
     min_sev = Severity[severity.upper()]
     result.findings = result.filter_by_severity(min_sev)
@@ -101,22 +112,37 @@ def image(image_ref: str, format: str, output: Optional[str], severity: str) -> 
     _output_result(result, format, output_path)
 
 
-async def _run_image_scan(target: ScanTarget) -> ScanResult:
-    """Execute image scan."""
+async def _run_image_scan(
+    target: ScanTarget,
+    scan_vulns: bool = True,
+    scan_secrets: bool = True,
+) -> ScanResult:
+    """Execute image scan with selected scanners."""
     from myosc.scanners import ImageScanner
 
     result = ScanResult(target=target)
     errors: list[str] = []
 
-    try:
-        scanner = ImageScanner()
-        console.print("[dim]Scanning container image...[/dim]")
-        findings = await scanner.scan(target)
-        result.findings.extend(findings)
-        result.scanner_versions["image"] = scanner.version
-        await scanner.close()
-    except Exception as e:
-        errors.append(f"Image scan error: {e}")
+    if scan_vulns:
+        try:
+            scanner = ImageScanner()
+            console.print("[dim]Scanning container image for vulnerabilities...[/dim]")
+            findings = await scanner.scan(target)
+            result.findings.extend(findings)
+            result.scanner_versions["image"] = scanner.version
+            await scanner.close()
+        except Exception as e:
+            errors.append(f"Image vulnerability scan error: {e}")
+
+    if scan_secrets:
+        try:
+            scanner = SecretScanner()
+            console.print("[dim]Scanning container image for secrets...[/dim]")
+            findings = await scanner.scan(target)
+            result.findings.extend(findings)
+            result.scanner_versions["secret"] = scanner.version
+        except Exception as e:
+            errors.append(f"Image secret scan error: {e}")
 
     result.errors = errors
     return result

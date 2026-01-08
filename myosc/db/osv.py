@@ -16,7 +16,6 @@ import httpx
 from myosc.core.exceptions import DatabaseError
 from myosc.core.models import Package, Severity
 
-
 OSV_API_URL = "https://api.osv.dev/v1"
 DEFAULT_TIMEOUT = 30.0
 

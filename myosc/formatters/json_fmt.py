@@ -1,7 +1,6 @@
 """JSON output formatter."""
 
 import json
-from dataclasses import asdict
 from datetime import datetime
 from typing import Any
 

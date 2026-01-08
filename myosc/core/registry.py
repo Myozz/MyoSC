@@ -1,6 +1,6 @@
 """Scanner registry for plugin architecture."""
 
-from typing import Iterator
+from collections.abc import Iterator
 
 from myosc.core.models import ScanTarget
 from myosc.core.scanner import BaseScanner

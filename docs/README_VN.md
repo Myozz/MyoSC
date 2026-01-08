@@ -36,21 +36,20 @@ Usage: myosc [command] [target] [options]
 │ COMMAND     │ DESCRIPTION                                       │
 ├─────────────┼───────────────────────────────────────────────────┤
 │ fs          │ Quét filesystem (vulnerabilities + secrets)       │
-│ vulns       │ Chỉ quét vulnerabilities                          │
-│ secrets     │ Chỉ quét secrets                                  │
 │ image       │ Quét Docker image (.tar hoặc image name)          │
 └─────────────┴───────────────────────────────────────────────────┘
 ```
 
-### Global Options
+### Options
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ OPTION              │ DEFAULT   │ DESCRIPTION                   │
 ├─────────────────────┼───────────┼───────────────────────────────┤
+│ -s, --scanners      │ all       │ Scanners: vuln, secrets, all  │
 │ -f, --format        │ table     │ Output: table, json, sarif    │
 │ -o, --output        │ stdout    │ Ghi ra file                   │
-│ -s, --severity      │ low       │ Min severity: critical, high, │
+│ --severity          │ all       │ Min severity: critical, high, │
 │                     │           │ medium, low                   │
 │ -v, --version       │           │ Hiển thị version              │
 │ --help              │           │ Hiển thị help                 │
@@ -60,17 +59,21 @@ Usage: myosc [command] [target] [options]
 ### Ví Dụ
 
 ```bash
-# Quét toàn bộ project
+# Quét toàn bộ project (mặc định: vuln + secrets)
 myosc fs ./my-project
 
-# Chỉ quét vulnerabilities (severity high+)
-myosc vulns ./my-project --severity high
+# Chỉ quét vulnerabilities
+myosc fs ./my-project -s vuln
 
 # Chỉ quét secrets
-myosc secrets ./my-project
+myosc fs ./my-project -s secrets
 
-# Quét Docker image (extracted)
-myosc image python:3.11-slim.tar
+# Chỉ hiển thị high+ severity
+myosc fs ./my-project -s vuln --severity high
+
+# Quét Docker image
+myosc image nginx:latest
+myosc image python:3.11-slim.tar -s vuln
 
 # Xuất SARIF cho GitHub
 myosc fs . --format sarif --output results.sarif

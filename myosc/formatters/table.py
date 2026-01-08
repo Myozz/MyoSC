@@ -12,7 +12,6 @@ from myosc.core.models import (
 )
 from myosc.formatters.base import BaseFormatter
 
-
 SEVERITY_COLORS = {
     Severity.CRITICAL: "red bold",
     Severity.HIGH: "red",
