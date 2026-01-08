@@ -136,10 +136,9 @@ class OSVClient:
                     score_str = sev.get("score", "")
                     # Parse CVSS vector or score
                     if score_str:
-                        try:
+                        import contextlib
+                        with contextlib.suppress(ValueError, IndexError):
                             cvss_score = float(score_str.split("/")[0].split(":")[-1])
-                        except (ValueError, IndexError):
-                            pass
                     severity = Severity.from_cvss(cvss_score)
                     break
 

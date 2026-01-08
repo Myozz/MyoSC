@@ -99,7 +99,7 @@ class VulnerabilityScanner(BaseScanner):
                 packages.extend(result.packages)
         else:
             # Walk directory for package files
-            for pattern in PARSERS.keys():
+            for pattern in PARSERS:
                 for file in path.rglob(pattern):
                     # Skip node_modules, venv, etc.
                     if self._should_skip(file):

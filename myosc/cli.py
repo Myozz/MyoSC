@@ -1,8 +1,9 @@
 """myosc CLI using Click directly for stability."""
 
+from __future__ import annotations
+
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
@@ -55,7 +56,7 @@ def fs(
     path: str,
     scanners: str,
     format: str,
-    output: Optional[str],
+    output: str | None,
     severity: str,
 ) -> None:
     """Scan filesystem for vulnerabilities and secrets.
@@ -88,7 +89,7 @@ def image(
     image_ref: str,
     scanners: str,
     format: str,
-    output: Optional[str],
+    output: str | None,
     severity: str,
 ) -> None:
     """Scan Docker image for vulnerabilities and secrets.
@@ -182,7 +183,7 @@ async def _run_scan(
     return result
 
 
-def _output_result(result: ScanResult, format: str, output: Optional[Path]) -> None:
+def _output_result(result: ScanResult, format: str, output: Path | None) -> None:
     """Format and output result."""
     format = format.lower()
 
