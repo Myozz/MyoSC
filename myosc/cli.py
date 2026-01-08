@@ -1,8 +1,9 @@
 """myosc CLI using Click directly for stability."""
 
+from __future__ import annotations
+
 import asyncio
 from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
@@ -55,7 +56,7 @@ def fs(
     path: str,
     scanners: str,
     format: str,
-    output: Optional[str],
+    output: str | None,
     severity: str,
 ) -> None:
     """Scan filesystem for vulnerabilities and secrets.
@@ -88,7 +89,7 @@ def image(
     image_ref: str,
     scanners: str,
     format: str,
-    output: Optional[str],
+    output: str | None,
     severity: str,
 ) -> None:
     """Scan Docker image for vulnerabilities and secrets.
@@ -136,11 +137,11 @@ async def _run_image_scan(
 
     if scan_secrets:
         try:
-            scanner = SecretScanner()
+            secret_scanner = SecretScanner()
             console.print("[dim]Scanning container image for secrets...[/dim]")
-            findings = await scanner.scan(target)
+            findings = await secret_scanner.scan(target)
             result.findings.extend(findings)
-            result.scanner_versions["secret"] = scanner.version
+            result.scanner_versions["secret"] = secret_scanner.version
         except Exception as e:
             errors.append(f"Image secret scan error: {e}")
 
@@ -170,11 +171,11 @@ async def _run_scan(
 
     if scan_secrets:
         try:
-            scanner = SecretScanner()
+            secret_scanner = SecretScanner()
             console.print("[dim]Scanning for secrets...[/dim]")
-            findings = await scanner.scan(target)
+            findings = await secret_scanner.scan(target)
             result.findings.extend(findings)
-            result.scanner_versions["secret"] = scanner.version
+            result.scanner_versions["secret"] = secret_scanner.version
         except Exception as e:
             errors.append(f"Secret scan error: {e}")
 
@@ -182,7 +183,7 @@ async def _run_scan(
     return result
 
 
-def _output_result(result: ScanResult, format: str, output: Optional[Path]) -> None:
+def _output_result(result: ScanResult, format: str, output: Path | None) -> None:
     """Format and output result."""
     format = format.lower()
 
@@ -204,8 +205,8 @@ def _output_result(result: ScanResult, format: str, output: Optional[Path]) -> N
             console.print(content)
 
     elif format == "sarif":
-        fmt = SarifFormatter()
-        content = fmt.format(result)
+        sarif_formatter = SarifFormatter()
+        content = sarif_formatter.format(result)
         if output:
             output.write_text(content, encoding="utf-8")
             console.print(f"[green]SARIF report written to {output}[/green]")

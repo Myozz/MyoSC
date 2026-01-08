@@ -1,4 +1,6 @@
-"""Vulnerability scanner using OSV database."""
+# Vulnerability scanner using OSV database.
+
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -16,7 +18,7 @@ from myosc.scanners.package_parsers import PARSERS
 
 
 class VulnerabilityScanner(BaseScanner):
-    """Scanner for detecting vulnerabilities in dependencies."""
+    # Scanner for detecting vulnerabilities in dependencies.
 
     def __init__(self) -> None:
         self._osv = OSVClient()
@@ -35,7 +37,7 @@ class VulnerabilityScanner(BaseScanner):
         return [TargetType.FILESYSTEM.value, TargetType.REPOSITORY.value]
 
     async def scan(self, target: ScanTarget) -> list[Finding]:
-        """Scan target for vulnerable dependencies."""
+        # Scan target for vulnerable dependencies.
         path = Path(target.path)
         findings: list[Finding] = []
 
@@ -90,16 +92,17 @@ class VulnerabilityScanner(BaseScanner):
         return findings
 
     async def _discover_packages(self, path: Path) -> list[Package]:
-        """Discover and parse package files in directory."""
+        # Discover and parse package files in directory.
         packages: list[Package] = []
 
         if path.is_file():
+            # Exact match: check if filename is in PARSERS
             if path.name in PARSERS:
                 result = PARSERS[path.name](path)
                 packages.extend(result.packages)
         else:
             # Walk directory for package files
-            for pattern in PARSERS.keys():
+            for pattern in PARSERS:
                 for file in path.rglob(pattern):
                     # Skip node_modules, venv, etc.
                     if self._should_skip(file):
@@ -110,7 +113,7 @@ class VulnerabilityScanner(BaseScanner):
         return packages
 
     def _should_skip(self, path: Path) -> bool:
-        """Check if path should be skipped."""
+        # Check if path should be skipped.
         skip_dirs = {
             "node_modules",
             "venv",
@@ -126,6 +129,6 @@ class VulnerabilityScanner(BaseScanner):
         return any(part in skip_dirs for part in path.parts)
 
     async def close(self) -> None:
-        """Close database connections."""
+        # Close database connections.
         await self._osv.close()
         await self._epss.close()
