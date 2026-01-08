@@ -165,16 +165,19 @@ class ImageScanner(BaseScanner):
             elif line.startswith("Status:"):
                 current["status"] = line.split(":", 1)[1].strip()
             elif not line.strip() and current:
-                if "install ok installed" in current.get("status", ""):
-                    if current.get("name") and current.get("version"):
-                        packages.append(
-                            Package(
-                                name=current["name"],
-                                version=current["version"],
-                                ecosystem="debian",
-                                path="dpkg",
-                            )
+                if (
+                    "install ok installed" in current.get("status", "")
+                    and current.get("name")
+                    and current.get("version")
+                ):
+                    packages.append(
+                        Package(
+                            name=current["name"],
+                            version=current["version"],
+                            ecosystem="debian",
+                            path="dpkg",
                         )
+                    )
                 current = {}
 
         return packages

@@ -1,25 +1,25 @@
 """Custom exceptions."""
 
 
-class myoscError(Exception):
+class MyoscError(Exception):
     """Base exception for myosc."""
 
     pass
 
 
-class ScanError(myoscError):
+class ScanError(MyoscError):
     """Error during scanning."""
 
     pass
 
 
-class ConfigError(myoscError):
+class ConfigError(MyoscError):
     """Configuration error."""
 
     pass
 
 
-class DatabaseError(myoscError):
+class DatabaseError(MyoscError):
     """Vulnerability database error."""
 
     pass
