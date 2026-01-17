@@ -38,7 +38,21 @@ class TestSeverity:
 class TestVulnerabilityFinding:
     """Tests for VulnerabilityFinding."""
 
-    def test_priority_score_cvss_only(self) -> None:
+    def test_priority_score_uses_myo_score_if_available(self) -> None:
+        """When myo_score is set (from MyoAPI), use it directly."""
+        finding = VulnerabilityFinding(
+            id="TEST-001",
+            severity=Severity.HIGH,
+            title="Test",
+            description="Test",
+            cvss_score=8.0,
+            epss_score=0.5,
+            myo_score=0.85,  # MyoAPI pre-calculated score
+        )
+        assert finding.priority_score == 0.85
+
+    def test_priority_score_fallback_calculation(self) -> None:
+        """When myo_score is 0, calculate from CVSS/EPSS/KEV."""
         finding = VulnerabilityFinding(
             id="TEST-001",
             severity=Severity.HIGH,
@@ -46,23 +60,29 @@ class TestVulnerabilityFinding:
             description="Test",
             cvss_score=8.0,
             epss_score=0.0,
+            myo_score=0.0,  # No MyoAPI score
         )
+        # CVSS/10 * 0.3 = 0.8 * 0.3 = 0.24
+        assert finding.priority_score == pytest.approx(0.24)
 
-        # With EPSS=0, score should be CVSS * 0.4
-        assert finding.priority_score == pytest.approx(0.32)
-
-    def test_priority_score_epss_weights_more(self) -> None:
+    def test_priority_score_with_kev(self) -> None:
+        """KEV adds 0.2 to priority score."""
         finding = VulnerabilityFinding(
             id="TEST-001",
-            severity=Severity.HIGH,
+            severity=Severity.CRITICAL,
             title="Test",
             description="Test",
-            cvss_score=5.0,  # Medium CVSS
-            epss_score=0.9,  # High EPSS
+            cvss_score=10.0,
+            epss_score=0.9,
+            is_kev=True,
+            myo_score=0.0,  # Force fallback calculation
         )
+        # CVSS: 10/10 * 0.3 = 0.3
+        # EPSS: 0.9 * 0.5 = 0.45
+        # KEV: 1.0 * 0.2 = 0.2
+        # Total: 0.95
+        assert finding.priority_score == pytest.approx(0.95)
 
-        # EPSS weighs 0.6, so high EPSS should dominate
-        assert finding.priority_score > 0.5
 
 
 class TestScanResult:

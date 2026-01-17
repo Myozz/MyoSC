@@ -1,6 +1,5 @@
-"""Database clients exports."""
+# Database clients exports.
 
-from myosc.db.epss import EPSSClient
-from myosc.db.osv import OSVClient
+from myosc.db.myoapi import MyoAPIClient
 
-__all__ = ["OSVClient", "EPSSClient"]
+__all__ = ["MyoAPIClient"]

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "myosc"
-version = "0.1.0"
+version = "0.2.0"
 description = "MyoSC - Multi-purpose security scanner for source code, container images, and secrets"
 authors = ["Myozz <khanhbg27@gmail.com>"]
 readme = "README.md"
@@ -20,6 +20,7 @@ docker = "^7.0.0"
 tomli = "^2.0.1"
 packaging = "^24.0"
 click = "^8.1.0"
+cvss = "^3.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"

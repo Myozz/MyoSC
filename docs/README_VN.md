@@ -3,6 +3,7 @@
 ## Giới Thiệu
 
 **MyoSC** (Myo Security Scanner) là công cụ quét bảo mật đa năng:
+
 - **Vulnerabilities** - Lỗ hổng trong dependencies (OSV.dev + EPSS)
 - **Secrets** - API keys, tokens hardcode trong source code
 - **Container Images** - Quét Docker images
@@ -103,13 +104,25 @@ myosc fs . --format json --output report.json
 ### Vulnerability Scanner
 
 ```
-Package Files ──▶ OSV.dev API ──▶ EPSS API ──▶ Priority Score
-                  (lỗ hổng)       (xác suất)   (CVSS*0.4 + EPSS*0.6)
+Package Files ──▶ MyoAPI ──▶ Myo Score
+                  (NVD + OSV + GHSA + EPSS + KEV)
+```
+
+**Nguồn dữ liệu (qua [MyoAPI](https://github.com/Myozz/MyoAPI)):**
+
+- **NVD**: CVSS scores, mô tả
+- **OSV**: Packages bị ảnh hưởng
+- **GHSA**: GitHub advisories
+- **EPSS**: Xác suất bị exploit
+- **CISA KEV**: Lỗ hổng đang bị khai thác
+
+**Công thức Myo Score:**
+
+```
+MyoScore = (CVSS/10 × 0.3) + (EPSS × 0.5) + (KEV × 0.2)
 ```
 
 - **Hỗ trợ:** `requirements.txt`, `pyproject.toml`, `package.json`, `go.mod`
-- **OSV.dev:** Cập nhật nhanh hơn NVD, focus open-source
-- **EPSS:** Xác suất thực tế bị exploit trong 30 ngày
 
 ### Secret Scanner
 

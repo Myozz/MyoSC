@@ -102,18 +102,37 @@ class TableFormatter(BaseFormatter):
 
     def _print_vulnerabilities(self, findings: list[VulnerabilityFinding], console: Console) -> None:
         """Print vulnerabilities table."""
-        # Sort by priority score (highest first)
-        findings = sorted(findings, key=lambda f: f.priority_score, reverse=True)
+        # Severity order for sorting (CRITICAL=0, HIGH=1, etc. for ascending sort)
+        severity_order = {
+            Severity.CRITICAL: 0,
+            Severity.HIGH: 1,
+            Severity.MEDIUM: 2,
+            Severity.LOW: 3,
+            Severity.UNKNOWN: 4,
+        }
+
+        # Sort by: Package (A-Z), Severity, MyoScore (desc), ID, Version
+        findings = sorted(
+            findings,
+            key=lambda f: (
+                (f.affected_package.name.lower() if f.affected_package else ""),
+                severity_order.get(f.severity, 4),
+                -f.priority_score,  # MyoScore descending
+                f.cve_id or f.id,
+                (f.affected_package.version if f.affected_package else ""),
+            ),
+        )
 
         table = Table(title="Vulnerabilities", show_header=True, header_style="bold", show_lines=True)
-        table.add_column("ID", style="cyan", no_wrap=True)
-        table.add_column("Severity", justify="center")
         table.add_column("Package", style="green")
         table.add_column("Version", style="dim")
-        table.add_column("Fixed", style="green dim")
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Severity", justify="center")
         table.add_column("CVSS", justify="right")
         table.add_column("EPSS", justify="right")
-        table.add_column("Title", max_width=40)
+        table.add_column("Myo", justify="right")  # MyoScore
+        table.add_column("KEV", justify="center")  # Known Exploited Vulnerability
+        table.add_column("Fixed", style="green dim")
 
         for f in findings:
             # Severity with color
@@ -124,19 +143,22 @@ class TableFormatter(BaseFormatter):
             pkg_name = f.affected_package.name if f.affected_package else "-"
             pkg_version = f.affected_package.version if f.affected_package else "-"
 
-            # CVSS and EPSS scores
+            # Scores
             cvss = f"{f.cvss_score:.1f}" if f.cvss_score else "-"
             epss = f"{f.epss_score:.1%}" if f.epss_score else "-"
+            myo = f"{f.priority_score:.2f}" if f.priority_score else "-"
+            kev = Text("✓", style="red bold") if f.is_kev else Text("-", style="dim")
 
             table.add_row(
-                f.cve_id or f.id,
-                severity,
                 pkg_name,
                 pkg_version,
-                f.fixed_version or "-",
+                f.cve_id or f.id,
+                severity,
                 cvss,
                 epss,
-                f.title[:40],
+                myo,
+                kev,
+                f.fixed_version or "-",
             )
 
         console.print(table)
