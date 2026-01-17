@@ -14,6 +14,7 @@ venv/
 env/
 
 # IDE
+.agent/
 .idea/
 .vscode/
 *.swp
@@ -38,3 +39,4 @@ Thumbs.db
 
 # Poetry
 poetry.lock
+.agent

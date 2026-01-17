@@ -14,8 +14,7 @@ from myosc.core.models import (
     VulnerabilityFinding,
 )
 from myosc.core.scanner import BaseScanner
-from myosc.db.epss import EPSSClient
-from myosc.db.osv import OSVClient
+from myosc.db.myoapi import MyoAPIClient, clear_cache
 
 
 @dataclass
@@ -41,8 +40,7 @@ class ImageScanner(BaseScanner):
     """Scanner for Docker/OCI container images."""
 
     def __init__(self) -> None:
-        self._osv = OSVClient()
-        self._epss = EPSSClient()
+        self._myoapi = MyoAPIClient()
 
     @property
     def name(self) -> str:
@@ -50,7 +48,7 @@ class ImageScanner(BaseScanner):
 
     @property
     def version(self) -> str:
-        return "0.1.0"
+        return "0.2.0"  # Version bump for MyoAPI integration
 
     @property
     def supported_targets(self) -> list[str]:
@@ -76,41 +74,29 @@ class ImageScanner(BaseScanner):
         if not packages:
             return findings
 
-        # Query vulnerabilities
-        vuln_map = await self._osv.query_batch(packages)
+        # Query MyoAPI for vulnerabilities (batch query with caching)
+        vuln_map = await self._myoapi.query_packages_batch(packages)
 
-        # Get EPSS scores
-        all_cves: list[str] = []
-        for vulns in vuln_map.values():
-            for v in vulns:
-                all_cves.extend(v.aliases)
-
-        epss_scores = {}
-        if all_cves:
-            epss_scores = await self._epss.get_scores_batch(all_cves)
-
-        # Build findings
+        # Build findings from MyoAPI results
         for package, vulns in vuln_map.items():
             for vuln in vulns:
-                epss_score = 0.0
-                cve_id = ""
-                for alias in vuln.aliases:
-                    if alias in epss_scores:
-                        score = epss_scores[alias].epss
-                        if score > epss_score:
-                            epss_score = score
-                            cve_id = alias
+                # Get fixed version (first one if multiple)
+                fixed_version = ""
+                if vuln.fixed_versions:
+                    fixed_version = vuln.fixed_versions[0]
 
                 finding = VulnerabilityFinding(
                     id=vuln.id,
-                    cve_id=cve_id or (vuln.aliases[0] if vuln.aliases else ""),
+                    cve_id=vuln.cve_id,
                     severity=vuln.severity,
                     cvss_score=vuln.cvss_score,
-                    epss_score=epss_score,
-                    title=vuln.summary or vuln.id,
-                    description=vuln.details,
+                    epss_score=vuln.epss_score,
+                    myo_score=vuln.myo_score,
+                    is_kev=vuln.is_kev,
+                    title=vuln.title or vuln.id,
+                    description=vuln.description,
                     affected_package=package,
-                    fixed_version=vuln.fixed_version,
+                    fixed_version=fixed_version,
                     file_path=f"image:{target.path}",
                     references=vuln.references,
                 )
@@ -323,6 +309,6 @@ class ImageScanner(BaseScanner):
         return packages
 
     async def close(self) -> None:
-        """Close database connections."""
-        await self._osv.close()
-        await self._epss.close()
+        """Close API connections and clear cache."""
+        await self._myoapi.close()
+        clear_cache()

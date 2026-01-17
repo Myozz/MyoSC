@@ -70,16 +70,26 @@ class VulnerabilityFinding(Finding):
     cve_id: str = ""
     cvss_score: float = 0.0
     epss_score: float = 0.0  # exploit prediction score (0-1)
+    myo_score: float = 0.0   # MyoAPI priority score (0-1), pre-calculated
+    is_kev: bool = False     # whether CVE is in CISA KEV catalog
     affected_package: Package | None = None
     fixed_version: str = ""
     references: list[str] = field(default_factory=list)
 
     @property
     def priority_score(self) -> float:
-        """Calculate priority score combining CVSS and EPSS."""
-        # EPSS weighs more as it indicates real-world exploitability
+        """Get priority score.
+
+        If myo_score is available (from MyoAPI), use it directly.
+        Otherwise calculate: (CVSS/10 * 0.3) + (EPSS * 0.5) + (KEV * 0.2)
+        """
+        if self.myo_score > 0:
+            return self.myo_score
+
+        # Fallback calculation
         cvss_normalized = self.cvss_score / 10.0
-        return (cvss_normalized * 0.4) + (self.epss_score * 0.6)
+        kev_bonus = 1.0 if self.is_kev else 0.0
+        return (cvss_normalized * 0.3) + (self.epss_score * 0.5) + (kev_bonus * 0.2)
 
 
 @dataclass

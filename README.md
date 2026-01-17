@@ -93,9 +93,22 @@ myosc fs . --format sarif --output results.sarif
 ### Vulnerability Scanner
 
 ```
-Package Files ──▶ OSV.dev API ──▶ EPSS API ──▶ Priority Score
-                  (vulns)         (exploit     (CVSS*0.4 + EPSS*0.6)
-                                   probability)
+Package Files ──▶ MyoAPI ──▶ Myo Score
+                  (NVD + OSV + GHSA + EPSS + KEV)
+```
+
+**Data Sources (via [MyoAPI](https://github.com/Myozz/MyoAPI)):**
+
+- **NVD**: CVSS scores, descriptions
+- **OSV**: Affected packages
+- **GHSA**: GitHub advisories
+- **EPSS**: Exploit probability
+- **CISA KEV**: Known exploited vulnerabilities
+
+**Myo Score Formula:**
+
+```
+MyoScore = (CVSS/10 × 0.3) + (EPSS × 0.5) + (KEV × 0.2)
 ```
 
 - **Supported:** `requirements.txt`, `pyproject.toml`, `package.json`, `go.mod`
