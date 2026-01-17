@@ -76,7 +76,8 @@ class MyoAPIClient:
         # Check cache first
         cache_key = f"{package.ecosystem}:{package.name}"
         if cache_key in _cache:
-            return _cache[cache_key]
+            cached: list[MyoVulnerability] = _cache[cache_key]
+            return cached
 
         client = await self._get_client()
 
@@ -165,7 +166,8 @@ class MyoAPIClient:
         """
         # Check cache
         if cve_id in _cache:
-            return _cache[cve_id]
+            cached: MyoVulnerability | None = _cache[cve_id]
+            return cached
 
         client = await self._get_client()
 
